@@ -1,5 +1,5 @@
-#ifndef RAW_C
-#define RAW_C
+#ifndef EDITOR_C
+#define EDITOR_C
 
 #include "editor.h"
 
