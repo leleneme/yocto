@@ -3,6 +3,7 @@
 
 #include "headers.h"
 
+void die(const char *err);
 void enableRawMode();
 void disableRawMode();
 
