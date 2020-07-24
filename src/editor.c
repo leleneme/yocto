@@ -3,6 +3,13 @@
 
 #include "editor.h"
 
+/* Error handling */
+void die(const char *err) {
+    perror(err);
+    exit(1);
+}
+
+/* Raw mode stuff */
 struct termios orig_termios;
 
 void enableRawMode() {
@@ -30,10 +37,27 @@ void disableRawMode() {
         die("tcsetattr");
 }
 
-void die(const char *err) {
-    perror(err);
-    exit(1);
+/* Editor functions*/
+char editorReadKey() {
+    int nread;
+    char c;
+
+    while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
+        if (nread == -1 && errno != EAGAIN)
+            die("read");
+    }
+    return c;
 }
 
+void editorProcessKeypress() {
+    char c = editorReadKey();
+
+    switch (c)
+    {
+    case CTRL_KEY('q'):
+        exit(0);
+        break;
+    }
+}
 
 #endif
