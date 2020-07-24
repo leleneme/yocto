@@ -13,7 +13,11 @@ void enableRawMode();
 void disableRawMode();
 
 /* Editor functions*/
+/* Input */
 char editorReadKey();
 void editorProcessKeypress();
+
+/* Output */
+void editorRefreshScreen();
 
 #endif

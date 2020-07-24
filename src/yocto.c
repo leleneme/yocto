@@ -5,6 +5,7 @@ int main() {
     enableRawMode();
 
     while(1) {
+        editorRefreshScreen();
         editorProcessKeypress();
     }
 

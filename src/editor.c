@@ -5,6 +5,9 @@
 
 /* Error handling */
 void die(const char *err) {
+    write(STDOUT_FILENO, "\x1b[2J", 4);
+    write(STDOUT_FILENO, "\x1b[H", 3);
+
     perror(err);
     exit(1);
 }
@@ -38,6 +41,7 @@ void disableRawMode() {
 }
 
 /* Editor functions*/
+/* Input */
 char editorReadKey() {
     int nread;
     char c;
@@ -55,9 +59,23 @@ void editorProcessKeypress() {
     switch (c)
     {
     case CTRL_KEY('q'):
+        write(STDOUT_FILENO, "\x1b[2J", 4);
+        write(STDOUT_FILENO, "\x1b[H", 3);
         exit(0);
         break;
     }
 }
+
+/* Output */
+
+void editorRefreshScreen() {
+    // \x1b -> escape character
+
+    // clear the screen
+    write(STDIN_FILENO, "\x1b[2J", 4);
+    // put cursor at the top-left
+    write(STDOUT_FILENO, "\x1b[H", 3);
+}
+
 
 #endif
