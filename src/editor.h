@@ -5,6 +5,10 @@
 
 #define CTRL_KEY(k) ((k) & 0x1f)
 
+struct editorConfig {
+    struct termios orig_termios;
+};
+
 /* Error handling */
 void die(const char *err);
 
@@ -19,5 +23,6 @@ void editorProcessKeypress();
 
 /* Output */
 void editorRefreshScreen();
+void editorDrawRows();
 
 #endif

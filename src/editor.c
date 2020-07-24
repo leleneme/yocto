@@ -13,16 +13,17 @@ void die(const char *err) {
 }
 
 /* Raw mode stuff */
-struct termios orig_termios;
+//struct termios orig_termios;
+
+struct editorConfig E;
 
 void enableRawMode() {
-    if (tcgetattr(STDIN_FILENO, &orig_termios) == -1)
+    if (tcgetattr(STDIN_FILENO, &E.orig_termios) == -1)
         die("tcgetattr");
 
-    tcgetattr(STDIN_FILENO, &orig_termios);
     atexit(disableRawMode);
 
-    struct termios raw = orig_termios;
+    struct termios raw = E.orig_termios;
     raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
     raw.c_oflag &= ~(OPOST);
     raw.c_cflag |= (CS8);
@@ -36,7 +37,7 @@ void enableRawMode() {
 }
 
 void disableRawMode() {
-    if(tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1)
+    if(tcsetattr(STDIN_FILENO, TCSAFLUSH, &E.orig_termios) == -1)
         die("tcsetattr");
 }
 
@@ -68,6 +69,13 @@ void editorProcessKeypress() {
 
 /* Output */
 
+void editorDrawRows() {
+    int y;
+    for(y = 0; y < 24; y++) {
+        write(STDIN_FILENO, "~\r\n", 3);
+    }
+}
+
 void editorRefreshScreen() {
     // \x1b -> escape character
 
@@ -75,7 +83,10 @@ void editorRefreshScreen() {
     write(STDIN_FILENO, "\x1b[2J", 4);
     // put cursor at the top-left
     write(STDOUT_FILENO, "\x1b[H", 3);
-}
 
+    editorDrawRows();
+    // put cursor at the top-left
+    write(STDOUT_FILENO, "\x1b[H", 3);
+}
 
 #endif
