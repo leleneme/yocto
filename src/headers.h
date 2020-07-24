@@ -7,5 +7,6 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 
 #endif

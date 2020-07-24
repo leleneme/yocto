@@ -6,6 +6,8 @@
 #define CTRL_KEY(k) ((k) & 0x1f)
 
 struct editorConfig {
+    int screenrows;
+    int screencols;
     struct termios orig_termios;
 };
 
@@ -17,12 +19,14 @@ void enableRawMode();
 void disableRawMode();
 
 /* Editor functions*/
-/* Input */
+int getWindowSize(int *rows, int *cols);
+
 char editorReadKey();
 void editorProcessKeypress();
 
-/* Output */
 void editorRefreshScreen();
 void editorDrawRows();
+
+void initEditor();
 
 #endif
