@@ -6,6 +6,7 @@
 #define CTRL_KEY(k) ((k) & 0x1f)
 #define VERSION "0.0.1"
 
+// Editor Keys
 enum editorKey {
     ARROW_LEFT = 1000, 
     ARROW_RIGHT, 
@@ -18,10 +19,18 @@ enum editorKey {
     PAGE_DOWN,
 };
 
+// Editor Row
+typedef struct erow {
+    int size;
+    char *chars;
+} erow;
+
 struct editorConfig {
     int cx, cy; // Cursor position
     int screenrows;
     int screencols;
+    int numrows;
+    erow row;
     struct termios orig_termios;
 };
 
@@ -52,6 +61,10 @@ void editorProcessKeypress();
 void editorRefreshScreen();
 void editorDrawRows();
 
+/* Editor file I/O */
+void editorOpen(char *filename);
+
+/* Editor Initialization */
 void initEditor();
 
 #endif
