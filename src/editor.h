@@ -27,6 +27,7 @@ typedef struct erow {
 
 struct editorConfig {
     int cx, cy; // Cursor position
+    int rowoff;
     int screenrows;
     int screencols;
     int numrows;
@@ -59,6 +60,7 @@ int editorReadKey();
 void editorProcessKeypress();
 
 void editorRefreshScreen();
+void editorScroll();
 void editorDrawRows();
 
 /* Row Operations */
