@@ -4,6 +4,7 @@
 #include "headers.h"
 
 #define CTRL_KEY(k) ((k) & 0x1f)
+#define VERSION "0.0.1"
 
 struct editorConfig {
     int screenrows;
