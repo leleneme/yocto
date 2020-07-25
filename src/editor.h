@@ -6,6 +6,13 @@
 #define CTRL_KEY(k) ((k) & 0x1f)
 #define VERSION "0.0.1"
 
+enum editorKey {
+    ARROW_LEFT = 1000, 
+    ARROW_RIGHT, 
+    ARROW_UP, 
+    ARROW_DOWN
+};
+
 struct editorConfig {
     int cx, cy; // Cursor position
     int screenrows;
@@ -33,8 +40,8 @@ void abAppend(struct abuf *ab, const char *s, int len);
 int getCursorPosition(int *rows, int *cols);
 int getWindowSize(int *rows, int *cols);
 
-void editorMoveCursor(char key);
-char editorReadKey();
+void editorMoveCursor(int key);
+int editorReadKey();
 void editorProcessKeypress();
 
 void editorRefreshScreen();
