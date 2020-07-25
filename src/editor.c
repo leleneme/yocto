@@ -92,6 +92,23 @@ int getWindowSize(int *rows, int *cols) {
     }
 }
 
+void editorMoveCursor(char key) {
+    switch (key) {
+    case 'a':
+        E.cx--;
+        break;
+    case 'd':
+        E.cx++;
+        break;
+    case 'w':
+        E.cy--;
+        break;
+    case 's':
+        E.cy++;
+        break;
+    }
+}
+
 char editorReadKey() {
     int nread;
     char c;
@@ -106,12 +123,17 @@ char editorReadKey() {
 void editorProcessKeypress() {
     char c = editorReadKey();
 
-    switch (c)
-    {
+    switch (c) {
     case CTRL_KEY('q'):
         write(STDOUT_FILENO, "\x1b[2J", 4);
         write(STDOUT_FILENO, "\x1b[H", 3);
         exit(0);
+        break;
+    case 'w':
+    case 's':
+    case 'a':
+    case 'd':
+        editorMoveCursor(c);
         break;
     }
 }
@@ -156,7 +178,10 @@ void editorRefreshScreen() {
 
     editorDrawRows(&ab);
 
-    abAppend(&ab, "\x1b[H", 3);
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer), "\x1b[%d;%dH", E.cy + 1, E.cx + 1);
+    abAppend(&ab, buffer, strlen(buffer));
+
     abAppend(&ab, "\x1b[?25h", 6);
 
     write(STDOUT_FILENO, ab.b, ab.len);
@@ -164,6 +189,9 @@ void editorRefreshScreen() {
 }
 
 void initEditor() {
+    E.cx = 0;
+    E.cy = 0;
+
     if (getWindowSize(&E.screenrows, &E.screencols) == -1)
         die("getWindowSize");
 }

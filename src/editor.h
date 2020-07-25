@@ -7,6 +7,7 @@
 #define VERSION "0.0.1"
 
 struct editorConfig {
+    int cx, cy; // Cursor position
     int screenrows;
     int screencols;
     struct termios orig_termios;
@@ -32,6 +33,7 @@ void abAppend(struct abuf *ab, const char *s, int len);
 int getCursorPosition(int *rows, int *cols);
 int getWindowSize(int *rows, int *cols);
 
+void editorMoveCursor(char key);
 char editorReadKey();
 void editorProcessKeypress();
 
