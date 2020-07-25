@@ -11,6 +11,13 @@ struct editorConfig {
     struct termios orig_termios;
 };
 
+/* Append buffer */
+struct abuf {
+    char *b;
+    int len;
+};
+#define ABUF_INIT {NULL, 0}
+
 /* Error handling */
 void die(const char *err);
 
@@ -19,6 +26,8 @@ void enableRawMode();
 void disableRawMode();
 
 /* Editor functions*/
+void abAppend(struct abuf *ab, const char *s, int len);
+
 int getCursorPosition(int *rows, int *cols);
 int getWindowSize(int *rows, int *cols);
 

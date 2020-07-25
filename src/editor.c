@@ -13,8 +13,6 @@ void die(const char *err) {
 }
 
 /* Raw mode stuff */
-//struct termios orig_termios;
-
 struct editorConfig E;
 
 void enableRawMode() {
@@ -39,6 +37,20 @@ void enableRawMode() {
 void disableRawMode() {
     if(tcsetattr(STDIN_FILENO, TCSAFLUSH, &E.orig_termios) == -1)
         die("tcsetattr");
+}
+
+/* Abuffer */
+void abAppend(struct abuf *ab, const char *s, int len) {
+    char *new = realloc(ab->b, ab->len + len);
+
+    if(new == NULL) return;
+    memcpy(&new[ab->len], s, len);
+    ab->b = new;
+    ab->len += len;
+}
+
+void abFree(struct abuf *ab) {
+    free(ab->b);
 }
 
 /* Editor functions*/
@@ -104,28 +116,30 @@ void editorProcessKeypress() {
     }
 }
 
-void editorDrawRows() {
+void editorDrawRows(struct abuf *ab) {
     int y;
     for(y = 0; y < E.screenrows; y++) {
-        write(STDIN_FILENO, "~", 3);
+        abAppend(ab, "~", 1);
 
         if(y < E.screenrows - 1) {
-            write(STDOUT_FILENO, "\r\n", 2);
+            abAppend(ab, "\r\n", 2);
         }
     }
 }
 
 void editorRefreshScreen() {
+    struct abuf ab = ABUF_INIT;
     // \x1b -> escape character
 
-    // clear the screen
-    write(STDIN_FILENO, "\x1b[2J", 4);
-    // put cursor at the top-left
-    write(STDOUT_FILENO, "\x1b[H", 3);
+    abAppend(&ab, "\x1b[2J", 4);
+    abAppend(&ab, "\x1b[H", 3);
 
-    editorDrawRows();
-    // put cursor at the top-left
-    write(STDOUT_FILENO, "\x1b[H", 3);
+    editorDrawRows(&ab);
+
+    abAppend(&ab, "\x1b[H", 3);
+
+    write(STDOUT_FILENO, ab.b, ab.len);
+    abFree(&ab);
 }
 
 void initEditor() {
