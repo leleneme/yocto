@@ -54,3 +54,6 @@ dkms.conf
 # Build output directory
 bin/*
 !bin/.gitkeep
+
+# VSCode stuff
+.vscode/
