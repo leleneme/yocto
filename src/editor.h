@@ -5,6 +5,7 @@
 
 #define CTRL_KEY(k) ((k) & 0x1f)
 #define VERSION "0.0.1"
+#define TAB_STOP 8 //Tab size
 
 // Editor Keys
 enum editorKey {
@@ -22,7 +23,9 @@ enum editorKey {
 // Editor Row
 typedef struct erow {
     int size;
+    int rsize;
     char *chars;
+    char *render;
 } erow;
 
 struct editorConfig {
@@ -65,6 +68,7 @@ void editorScroll();
 void editorDrawRows();
 
 /* Row Operations */
+void editorUpdateRow(erow *row);
 void editorAppendRow(char *s, size_t len);
 
 /* Editor file I/O */
