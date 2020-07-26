@@ -37,6 +37,7 @@ struct editorConfig {
     int screencols;
     int numrows;
     erow *row;
+    char *filename;
     struct termios orig_termios;
 };
 
@@ -66,7 +67,8 @@ void editorProcessKeypress();
 
 void editorRefreshScreen();
 void editorScroll();
-void editorDrawRows();
+void editorDrawRows(struct abuf *ab);
+void editorDrawStatusBar(struct abuf *ab);
 
 /* Row Operations */
 int editorRowCxToRx(erow *row, int cx);
