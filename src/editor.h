@@ -41,6 +41,7 @@ struct editorConfig {
 
     int numrows;
     erow *row;
+    int dirty;
 
     char *filename;
     char statusmsg[80];
@@ -90,7 +91,9 @@ void editorRowInsertChar(erow *row, int at, int c);
 void editorInsertChar(int c);
 
 /* Editor file I/O */
+char *editorRowsToString(int *buflen);
 void editorOpen(char *filename);
+void editorSave();
 
 /* Editor Initialization */
 void initEditor();
