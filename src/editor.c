@@ -223,6 +223,12 @@ void editorScroll() {
     if(E.cy > E.rowoff + E.screenrows) {
         E.rowoff = E.cy - E.screenrows + 1;
     }
+    if (E.cx < E.coloff) {
+        E.coloff = E.cx;
+    }
+    if (E.cx >= E.coloff + E.screencols) {
+        E.coloff = E.cx - E.screencols + 1;
+    }
 }
 
 void editorDrawRows(struct abuf *ab) {
@@ -251,10 +257,11 @@ void editorDrawRows(struct abuf *ab) {
                 abAppend(ab, "~", 1);
             }
         } else {
-            int len = E.row[filerow].size;
+            int len = E.row[filerow].size - E.coloff;
+            if(len < 0) len = 0;
             if(len > E.screencols)
                 len = E.screencols;
-            abAppend(ab, E.row[filerow].chars, len);
+            abAppend(ab, &E.row[filerow].chars[E.coloff], len);
         }
 
         abAppend(ab, "\x1b[K", 3);
@@ -276,7 +283,8 @@ void editorRefreshScreen() {
     editorDrawRows(&ab);
 
     char buffer[32];
-    snprintf(buffer, sizeof(buffer), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1, E.cx + 1);
+    snprintf(buffer, sizeof(buffer), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1,
+                                                    (E.cx - E.coloff) + 1);
     abAppend(&ab, buffer, strlen(buffer));
 
     abAppend(&ab, "\x1b[?25h", 6);
@@ -317,6 +325,7 @@ void editorOpen(char *filename) {
 void initEditor() {
     E.cx = 0;
     E.cy = 0;
+    E.coloff = 0;
     E.rowoff = 0;
     E.numrows = 0;
     E.row = NULL;
