@@ -31,13 +31,20 @@ typedef struct erow {
 struct editorConfig {
     int cx, cy; // Cursor position
     int rx;
+
     int rowoff;
     int coloff;
+
     int screenrows;
     int screencols;
+
     int numrows;
     erow *row;
+
     char *filename;
+    char statusmsg[80];
+    time_t statusmsg_time;
+
     struct termios orig_termios;
 };
 
@@ -66,9 +73,11 @@ int editorReadKey();
 void editorProcessKeypress();
 
 void editorRefreshScreen();
+void editorSetStatusMessage(const char *fmt, ...);
 void editorScroll();
 void editorDrawRows(struct abuf *ab);
 void editorDrawStatusBar(struct abuf *ab);
+void editorDrawMessageBar(struct abuf *ab);
 
 /* Row Operations */
 int editorRowCxToRx(erow *row, int cx);
