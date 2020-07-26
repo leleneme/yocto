@@ -103,6 +103,9 @@ char *editorRowsToString(int *buflen);
 void editorOpen(char *filename);
 void editorSave();
 
+/* Input */
+char *editorPrompt(char *prompt);
+
 /* Editor Initialization */
 void initEditor();
 
