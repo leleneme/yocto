@@ -234,7 +234,7 @@ void editorScroll() {
     if(E.cy < E.rowoff) {
         E.rowoff = E.cy;
     }
-    if(E.cy > E.rowoff + E.screenrows) {
+    if(E.cy > E.rowoff + E.screenrows - 1) {
         E.rowoff = E.cy - E.screenrows + 1;
     }
     if (E.rx < E.coloff) {
