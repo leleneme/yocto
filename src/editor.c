@@ -16,7 +16,7 @@ char *C_HL_keywords[] = {
 // Highlight database
 struct editorSyntax HLDB[] = {
     {
-        "c",
+        "C",
         C_HL_extensions,
         C_HL_keywords,
         "//", "/*", "*/", 
@@ -754,37 +754,18 @@ void editorInsertChar(int c) {
 }
 
 void editorInsertNewLine() {
-    int filerow = E.rowoff+E.cy;
-    int filecol = E.coloff+E.cx;
-    erow *row = (filerow >= E.numrows) ? NULL : &E.row[filerow];
-    if(!row) {
-        if(filerow == E.numrows) {
-            editorInsertRow(filerow,"",0);
-            goto fixcursor; // Sorry
-        }
-        return;
-    }
-
-    if(filecol >= row->size)
-        filecol = row->size;
-
-    if(filecol == 0) {
-        editorInsertRow(filerow,"",0);
+    if (E.cx == 0) {
+        editorInsertRow(E.cy, "", 0);
     } else {
-        editorInsertRow(filerow + 1, row->chars + filecol, row->size - filecol);
-        row = &E.row[filerow];
-        row->chars[filecol] = '\0';
-        row->size = filecol;
+        erow *row = &E.row[E.cy];
+        editorInsertRow(E.cy + 1, &row->chars[E.cx], row->size - E.cx);
+        row = &E.row[E.cy];
+        row->size = E.cx;
+        row->chars[row->size] = '\0';
         editorUpdateRow(row);
     }
-fixcursor:
-    if(E.cy == E.screenrows-1) {
-        E.rowoff++;
-    } else {
-        E.cy++;
-    }
+    E.cy++;
     E.cx = 0;
-    E.coloff = 0;
 }
 
 void editorDelChar() {
