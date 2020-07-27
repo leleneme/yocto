@@ -6,7 +6,7 @@
 #define CTRL_KEY(k) ((k) & 0x1f)
 
 #define VERSION "0.0.1"
-#define TAB_STOP 8 //Tab size
+#define TAB_STOP 4 //Tab size
 #define QUIT_TIMES 2 // Times you need to press ^Q to confirm exit
 
 // Editor Keys
