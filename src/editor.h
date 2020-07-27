@@ -105,9 +105,10 @@ void editorOpen(char *filename);
 void editorSave();
 
 /* Input */
-char *editorPrompt(char *prompt);
+char *editorPrompt(char *prompt, void (*callback)(char *, int));
 
 /* Search */
+void editorFindCallback(char *query, int key);
 void editorFind();
 
 /* Editor Initialization */
