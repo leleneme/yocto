@@ -10,7 +10,9 @@ char *C_HL_keywords[] = {
     "struct", "union", "typedef", "static", "enum", "class", "case",
 
     "int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|",
-    "void|", NULL
+    "void|", 
+    "#define|", "#include|", "#if|", "#ifdef|", "#ifndef|", "#endif|", "#undef|",
+    "#else|", "#elif|", "#pragma|", "#error", NULL
 };
 
 // Highlight database
