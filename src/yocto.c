@@ -2,11 +2,14 @@
 #include "editor.h"
 
 int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        fprintf(stderr,"Usage: yocto <filename>\n");
+        exit(1);
+    }
+
     enableRawMode();
     initEditor();
-    if(argc >= 2) {
-        editorOpen(argv[1]);
-    }
+    editorOpen(argv[1]);
 
     editorSetStatusMessage("[HELP] Ctrl-Q: quit | Ctrl-S: save | Ctrl-F: find");
 
