@@ -771,7 +771,6 @@ void editorInsertNewLine() {
     if(filecol == 0) {
         editorInsertRow(filerow,"",0);
     } else {
-        editorSetStatusMessage("hi");
         editorInsertRow(filerow + 1, row->chars + filecol, row->size - filecol);
         row = &E.row[filerow];
         row->chars[filecol] = '\0';
