@@ -23,12 +23,28 @@ enum editorKey {
     PAGE_DOWN,
 };
 
+// Syntax Hightlighting
+enum editorHighlight {
+    HL_NORMAL = 0,
+    HL_NUMBER,
+    HL_MATCH
+};
+
+#define HL_HIGHLIGHT_NUMBERS (1<<0)
+
+struct editorSyntax {
+    char *filetype;
+    char **filematch;
+    int flags;
+};
+
 // Editor Row
 typedef struct erow {
     int size;
     int rsize;
     char *chars;
     char *render;
+    unsigned char *hl;
 } erow;
 
 struct editorConfig {
@@ -49,6 +65,7 @@ struct editorConfig {
     char statusmsg[80];
     time_t statusmsg_time;
 
+    struct editorSyntax *syntax;
     struct termios orig_termios;
 };
 
@@ -71,6 +88,12 @@ void abAppend(struct abuf *ab, const char *s, int len);
 
 int getCursorPosition(int *rows, int *cols);
 int getWindowSize(int *rows, int *cols);
+
+/* Syntax highlighting */
+int is_separator(int c);
+void editorUpdateSyntax(erow *row);
+int editorSyntaxToColor(int hl);
+void editorSelectSyntaxHighlight();
 
 void editorMoveCursor(int key);
 int editorReadKey();

@@ -3,6 +3,20 @@
 
 #include "editor.h"
 
+// Filetypes
+char *C_HL_extensions[] = { ".c", ".h", ".cpp", NULL };
+
+// Highlight database
+struct editorSyntax HLDB[] = {
+    {
+        "c",
+        C_HL_extensions,
+        HL_HIGHLIGHT_NUMBERS
+    },
+};
+#define HLDB_ENTRIES (sizeof(HLDB) / sizeof(HLDB[0]))
+
+
 /* Error handling */
 void die(const char *err) {
     write(STDOUT_FILENO, "\x1b[2J", 4);
@@ -89,6 +103,78 @@ int getWindowSize(int *rows, int *cols) {
         *cols = ws.ws_col;
         *rows = ws.ws_row;
         return 0;
+    }
+}
+
+int is_separator(int c) {
+    return isspace(c) || c == '\0' || strchr(",.()+-/*=~%<>[];", c) != NULL;
+}
+
+void editorUpdateSyntax(erow *row) {
+    row->hl = realloc(row->hl, row->rsize);
+    memset(row->hl, HL_NORMAL, row->rsize);
+
+    if(E.syntax == NULL)
+        return;
+
+    int prev_sep = 1;
+
+    int i = 0;
+    while(i < row->rsize) {
+        char c = row->render[i];
+        unsigned char prev_hl = (i > 0) ? row->hl[i - 1] : HL_NORMAL;
+
+        if(E.syntax->flags & HL_HIGHLIGHT_NUMBERS) {
+            if((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) ||
+                (c == '.' && prev_hl == HL_NUMBER)) {
+                row->hl[i] = HL_NUMBER;
+                i++;
+                prev_sep = 0;
+                continue;
+            }
+        }
+
+        prev_sep = is_separator(c);
+        i++;
+    }
+}
+
+int editorSyntaxToColor(int hl) {
+    switch(hl) {
+        case HL_NUMBER:
+            return 31; // Red
+        case HL_MATCH:
+            return 34; // Blue
+        default:
+            return 37;
+    }
+}
+
+void editorSelectSyntaxHighlight() {
+    E.syntax = NULL;
+    if(E.filename == NULL)
+        return;
+
+    char *ext = strrchr(E.filename, '.');
+
+    unsigned int j;
+    for(j = 0; j < HLDB_ENTRIES; j++) {
+        struct editorSyntax *s = &HLDB[j];
+
+        unsigned int i = 0;
+        while(s->filematch[i]) {
+            int is_ext = (s->filematch[i][0] == '.');
+            if((is_ext && ext && !strcmp(ext, s->filematch[i])) ||
+                (!is_ext && strstr(E.filename, s->filematch[i]))) {
+                E.syntax = s;
+                return;
+
+                int filerow;
+                for(filerow = 0; filerow < E.numrows; filerow++)
+                    editorUpdateSyntax(&E.row[filerow]);
+            }
+            i++;
+        }
     }
 }
 
@@ -310,7 +396,29 @@ void editorDrawRows(struct abuf *ab) {
             if(len < 0) len = 0;
             if(len > E.screencols)
                 len = E.screencols;
-            abAppend(ab, &E.row[filerow].render[E.coloff], len);
+            char *c = &E.row[filerow].render[E.coloff];
+            unsigned char *hl = &E.row[filerow].hl[E.coloff];
+            int current_color = -1;
+            int j;
+            for(j = 0; j < len; j++) {
+                if(hl[j] == HL_NORMAL) {
+                    if(current_color != -1) {
+                        abAppend(ab, "\x1b[39m", 5);
+                        current_color = -1;
+                    }
+                    abAppend(ab, &c[j], 1);
+                } else {
+                    int color = editorSyntaxToColor(hl[j]);
+                    if(color != current_color) {
+                        current_color = color;
+                        char buf[16];
+                        int clen = snprintf(buf, sizeof(buf), "\x1b[%dm", color);
+                        abAppend(ab, buf, clen);
+                    }
+                    abAppend(ab, &c[j], 1);
+                }
+            }
+            abAppend(ab, "\x1b[39m", 5);
         }
 
         abAppend(ab, "\x1b[K", 3);
@@ -326,8 +434,8 @@ void editorDrawStatusBar(struct abuf *ab) {
                         E.filename ? E.filename : "[No Name]", E.numrows,
                         E.dirty ? "(modified)" : "");
 
-    int rlen = snprintf(rstatus, sizeof(rstatus), "%d:%d",
-                        E.cy + 1, E.numrows);
+    int rlen = snprintf(rstatus, sizeof(rstatus), "%s - %d:%d",
+                        E.syntax ? E.syntax->filetype : "no ft", E.cy + 1, E.numrows);
     if(len > E.screencols)
         len = E.screencols;
     abAppend(ab, status, len);
@@ -434,6 +542,8 @@ void editorUpdateRow(erow *row) {
     }
     row->render[idx] = '\0';
     row->rsize = idx;
+
+    editorUpdateSyntax(row);
 }
 
 void editorInsertRow(int at, char *s, size_t len) {
@@ -450,6 +560,7 @@ void editorInsertRow(int at, char *s, size_t len) {
 
     E.row[at].rsize = 0;
     E.row[at].render = NULL;
+    E.row[at].hl = NULL;
     editorUpdateRow(&E.row[at]);
 
     E.numrows++;
@@ -459,6 +570,7 @@ void editorInsertRow(int at, char *s, size_t len) {
 void editorFreeRow(erow *row) {
     free(row->render);
     free(row->chars);
+    free(row->hl);
 }
 
 void editorDelRow(int at) {
@@ -567,6 +679,9 @@ char *editorRowsToString(int *buflen) {
 void editorOpen(char *filename) {
     free(E.filename);
     E.filename = strdup(filename);
+
+    editorSelectSyntaxHighlight();
+
     FILE *fp = fopen(filename, "r");
     if(!fp)
         die("fopen");
@@ -593,6 +708,7 @@ void editorSave() {
             editorSetStatusMessage("Save aborted");
             return;
         }
+        editorSelectSyntaxHighlight();
     }
 
     int len;
@@ -657,17 +773,51 @@ char *editorPrompt(char *prompt, void (*callback)(char *, int)){
 }
 
 void editorFindCallback(char *query, int key) {
-    if(key == '\r' || key == '\x1b')
-        return;
+    static int last_match = -1;
+    static int direction = 1;
 
+    static int saved_hl_line;
+    static char *saved_hl = NULL;
+
+    if(saved_hl) {
+        memcpy(E.row[saved_hl_line].hl, saved_hl, E.row[saved_hl_line].rsize);
+        free(saved_hl);
+        saved_hl = NULL;
+    }
+
+    if(key == '\r' || key == '\x1b') {
+        last_match = -1;
+        direction = 1;
+        return;
+    } else if (key == ARROW_RIGHT || key == ARROW_DOWN) {
+        direction = 1;
+    } else if (key == ARROW_LEFT || key == ARROW_UP) {
+        direction = -1;
+    } else {
+        last_match = -1;
+        direction = 1;
+    }
+    if (last_match == -1) direction = 1;
+    int current = last_match;
     int i;
     for(i = 0; i < E.numrows; i++) {
-        erow *row = &E.row[i];
+        current += direction;
+
+        if (current == -1) current = E.numrows - 1;
+        else if (current == E.numrows) current = 0;
+
+        erow *row = &E.row[current];
         char *match = strstr(row->render, query);
         if(match) {
-            E.cy = i;
+            last_match = current;
+            E.cy = current;
             E.cx = editorRowRxToCx(row, match - row->render);
-            E.rowoff = E.numrows;
+            E.rowoff = E.cy;
+
+            saved_hl_line = current;
+            saved_hl = malloc(row->rsize);
+            memcpy(saved_hl, row->hl, row->rsize);
+            memset(&row->hl[match - row->render], HL_MATCH, strlen(query));
             break;
         }
     }
@@ -704,6 +854,8 @@ void initEditor() {
     E.filename = NULL;
     E.statusmsg[0] = '\0';
     E.statusmsg_time = 0;
+
+    E.syntax = NULL;
 
     if (getWindowSize(&E.screenrows, &E.screencols) == -1)
         die("getWindowSize");
