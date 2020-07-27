@@ -85,6 +85,7 @@ void editorDrawMessageBar(struct abuf *ab);
 
 /* Row Operations */
 int editorRowCxToRx(erow *row, int cx);
+int editorRowRxToCx(erow *row, int rx);
 void editorUpdateRow(erow *row);
 void editorInsertRow(int at, char *s, size_t len);
 void editorFreeRow(erow *row);
@@ -105,6 +106,9 @@ void editorSave();
 
 /* Input */
 char *editorPrompt(char *prompt);
+
+/* Search */
+void editorFind();
 
 /* Editor Initialization */
 void initEditor();

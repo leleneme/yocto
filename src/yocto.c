@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
         editorOpen(argv[1]);
     }
 
-    editorSetStatusMessage("[HELP] Ctrl-Q: quit | Ctrl-S: save");
+    editorSetStatusMessage("[HELP] Ctrl-Q: quit | Ctrl-S: save | Ctrl-F: find");
 
     while(1) {
         editorRefreshScreen();
