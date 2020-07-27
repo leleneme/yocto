@@ -1,4 +1,3 @@
-#include <unistd.h>
 #include "editor.h"
 
 int main(int argc, char *argv[]) {
