@@ -48,42 +48,48 @@ struct editorSyntax {
     int flags;
 };
 
-// Editor Row
+/* A struct that represents a single row of the file loaded */
 typedef struct erow {
-    int idx;
+    int idx;  // Row index (stars at 0)
 
-    int size;
-    int rsize;
-    char *chars;
-    char *render;
-    unsigned char *hl;
+    int size;  // Size of the row, ignoring the null byte at the end
+    int rsize; // Size of the rendered row, with tabs and stuff
+    char *chars; // The actual content of the row, just chars
+    char *render; // The row content rendered, with tabs and stuff
+    unsigned char *hl; // Highlighting type for each chars in *render
 
-    int hl_open_comment;
+    int hl_open_comment; // If the row had a not closed comment
 } erow;
 
 struct editorConfig {
     int cx, cy; // Cursor position
-    int rx;
+    int rx;     // Cursor position at the render
 
-    int rowoff;
-    int coloff;
+    int rowoff; // Row offset 
+    int coloff; // Column offset
 
-    int screenrows;
-    int screencols;
+    int screenrows; // Number of rows in the terminal window
+    int screencols; // Number of cols in the terminal window
 
-    int numrows;
-    erow *row;
-    int dirty;
+    int numrows; // Number of rows
+    erow *row; // Actual rows!
+    int dirty; // Flag that checks if file is modified
 
-    char *filename;
+    char *filename; // Filename of the current file opened
     char statusmsg[80];
     time_t statusmsg_time;
 
-    struct editorSyntax *syntax;
+    struct editorSyntax *syntax; // Current syntax highlight used
     struct termios orig_termios;
 };
 
-/* Append buffer */
+/* The append buffer is a struct with a heap allocated string
+ * that can be appended to (that's where the name comes from)
+ * 
+ * Used to write all escape sequences in a buffer to then
+ * flush everything to the standart output at once, to
+ * prevent flickering
+ * learned that from the DOS experience :') */
 struct abuf {
     char *b;
     int len;

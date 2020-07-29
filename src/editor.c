@@ -3,19 +3,20 @@
 
 #include "editor.h"
 
-// Filetypes
-char *C_HL_extensions[] = { ".c", ".h", ".cpp", NULL };
+/* Filetypes */
+char *C_HL_extensions[] = { ".c", ".h", NULL };
 char *C_HL_keywords[] = {
     "switch", "if", "while", "for", "break", "continue", "return", "else",
     "struct", "union", "typedef", "static", "enum", "class", "case",
 
+    // PreProcessors
     "int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|",
     "void|", 
     "#define|", "#include|", "#if|", "#ifdef|", "#ifndef|", "#endif|", "#undef|",
     "#else|", "#elif|", "#pragma|", "#error", NULL
 };
 
-// Highlight database
+/* Highlight database */
 struct editorSyntax HLDB[] = {
     {
         "C",
@@ -40,6 +41,7 @@ void die(const char *err) {
 /* Raw mode stuff */
 struct editorConfig E;
 
+/* Raw mode is acctualy magic to me, thanks 60-70s programmers */
 void enableRawMode() {
     if (tcgetattr(STDIN_FILENO, &E.orig_termios) == -1)
         die("tcgetattr");
@@ -64,7 +66,8 @@ void disableRawMode() {
         die("tcsetattr");
 }
 
-/* Abuffer */
+/* Abuffer 
+ * Ok, this is cool */
 void abAppend(struct abuf *ab, const char *s, int len) {
     char *new = realloc(ab->b, ab->len + len);
 
@@ -79,6 +82,12 @@ void abFree(struct abuf *ab) {
 }
 
 /* Editor functions*/
+
+/* Using the escape sequence [6n to get the cursor position
+ * and store at *rows and *cols
+ * 
+ * Returns 0 at sucess
+ * Returns -1 at error */
 int getCursorPosition(int *rows, int *cols) {
     char buffer[32];
     unsigned int i = 0;
@@ -103,14 +112,20 @@ int getCursorPosition(int *rows, int *cols) {
     return 0;
 }
 
+/* Try to get number of cols and rows of the terminal
+ * If ioctl() fails I do it myself :( */
 int getWindowSize(int *rows, int *cols) {
     struct winsize ws;
 
     if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
+        // Here, ioctl fails, at least he tried
+        // To get the window size anyway I go to right bottom corner
+        // and get cursor position
         if(write(STDOUT_FILENO, "\x1b[999C\x1b[999B", 12) != 12)
             return -1;
         return getCursorPosition(rows, cols);
     } else {
+        // Here, ioctl succeeded (thanks)
         *cols = ws.ws_col;
         *rows = ws.ws_row;
         return 0;
@@ -120,12 +135,13 @@ int getWindowSize(int *rows, int *cols) {
 int is_separator(int c) {
     return isspace(c) || c == '\0' || strchr(",.()+-/*=~%<>[];", c) != NULL;
 }
-
+/* Set every byte of row->hl (that maps into every char in the row)
+ * to the right syntax type :) */
 void editorUpdateSyntax(erow *row) {
     row->hl = realloc(row->hl, row->rsize);
     memset(row->hl, HL_NORMAL, row->rsize);
 
-    if(E.syntax == NULL)
+    if(E.syntax == NULL) // No syntax
         return;
 
     char **keywords = E.syntax->keywords;
@@ -142,6 +158,7 @@ void editorUpdateSyntax(erow *row) {
     int in_string = 0;
     int in_comment = (row->idx > 0 && E.row[row->idx - 1].hl_open_comment);
 
+    /* I don't actually want to comment this, good luck future me */
     int i = 0;
     while(i < row->rsize) {
         char c = row->render[i];
@@ -240,6 +257,7 @@ void editorUpdateSyntax(erow *row) {
     }
 }
 
+/* Maps highlight token to terminal colors */
 int editorSyntaxToColor(int hl) {
     switch(hl) {
         case HL_MLCOMMENT:
@@ -260,6 +278,7 @@ int editorSyntaxToColor(int hl) {
     }
 }
 
+/* Selects the highlight scheme from HLDB depending on file extension */
 void editorSelectSyntaxHighlight() {
     E.syntax = NULL;
     if(E.filename == NULL)
@@ -288,6 +307,7 @@ void editorSelectSyntaxHighlight() {
     }
 }
 
+/* Move the cursor when arrow keys are pressed :) */
 void editorMoveCursor(int key) {
     erow *row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
 
